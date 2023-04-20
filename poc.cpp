@@ -7,23 +7,52 @@ struct state {
   int items[40];
 };
 
+class group;
+group *&current_group() {
+  static group *ptr{};
+  return ptr;
+}
+
+class group {
+  group *m_prev_in_chain;
+  unsigned m_child_count{};
+
+public:
+  constexpr group(const group &) = delete;
+  constexpr group(group &&) = delete;
+  constexpr group &operator=(const group &) = delete;
+  constexpr group &operator=(group &&) = delete;
+
+  group() {
+    m_prev_in_chain = current_group();
+    current_group() = this;
+  }
+  ~group() { current_group() = m_prev_in_chain; }
+
+  void create_element() { m_child_count++; }
+};
+
 // lays out, raii-style
-struct vgroup {};
-struct hgroup {};
+struct vgroup : public group {};
+struct hgroup : public group {};
 
 // create elements
-void inputbox(const casein::event &e) {}
-void text(const casein::event &e) {}
+bool button(const casein::event &e) {
+  current_group()->create_element();
+  return false;
+}
+void inputbox(const casein::event &e) { current_group()->create_element(); }
+void text(const casein::event &e) { current_group()->create_element(); }
 
 class poc {
   state &s;
   const casein::event &e;
 
-  void create_input() { inputbox(e); }
-  void search_input() { inputbox(e); }
+  void create_input() const { inputbox(e); }
+  void search_input() const { inputbox(e); }
 
-  void title() { text(e); }
-  void input() {
+  void title() const { text(e); }
+  void input() const {
     if (s.create_mode) {
       create_input();
     } else {
@@ -31,23 +60,35 @@ class poc {
     }
   }
 
-  void item(auto i) {}
+  void item(auto i) const {
+    hgroup hg{};
 
-  void header() {
+    if (button(e)) {
+    }
+    text(e);
+  }
+
+  void header() const {
     hgroup hg{};
 
     title();
     input();
   }
-  void list() {
+  void list() const {
     vgroup vg{};
 
     for (auto i : s.items) {
       item(i);
     }
   }
-  void footer() {}
-  void info() {}
+  void footer() const { text(e); }
+  void info() const {
+    if (s.create_mode) {
+      text(e);
+    } else {
+      text(e);
+    }
+  }
 
 public:
   explicit constexpr poc(state &s, const casein::event &e) : s{s}, e{e} {}

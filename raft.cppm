@@ -6,6 +6,7 @@ namespace raft {
 struct element {
   element *next;
   element *parent;
+  quack::pos pos{100, 100};
 };
 element *&next_element() {
   static element *ptr{};
@@ -80,12 +81,9 @@ public:
       auto r = e.parent == 0 ? 1.0f : 0.0f;
       return quack::colour{r, p, n, 1};
     });
-    m_il.batch()->positions().map([](auto *c) {
-      for (auto i = 0; i < max_elements; i++) {
-        c[i] = {0, (float)i};
-      }
-    });
-    m_il.batch()->resize(1, max_elements, 1, max_elements);
+    m_il.fill_pos([](const auto &e) { return e.pos; });
+    m_il.batch()->resize(max_elements, max_elements, max_elements,
+                         max_elements);
   }
 
   void process_event(const casein::event &e) {

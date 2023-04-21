@@ -22,7 +22,15 @@ export group *&current_group() {
 class group {
   group *m_prev_in_chain;
   element *m_parent{};
+  element *m_head{};
   element *m_tail{};
+
+protected:
+  void for_each(auto &&fn) {
+    for (auto e = m_head; e != nullptr; e = e->next) {
+      fn(e);
+    }
+  }
 
 public:
   constexpr group(const group &) = delete;
@@ -45,6 +53,7 @@ public:
     e->parent = m_parent;
 
     if (m_tail == nullptr) {
+      m_head = e;
       m_tail = e;
     } else {
       m_tail->next = e;
@@ -55,8 +64,22 @@ public:
 };
 
 // lays out, raii-style
-export struct vgroup : public group {};
-export struct hgroup : public group {};
+export struct vgroup : public group {
+  ~vgroup() {
+    for_each([i = 0](auto *e) mutable {
+      e->pos = {0, (float)i};
+      i++;
+    });
+  }
+};
+export struct hgroup : public group {
+  ~hgroup() {
+    for_each([i = 0](auto *e) mutable {
+      e->pos = {(float)i, 0};
+      i++;
+    });
+  }
+};
 
 export template <typename Node> class layout {
   static constexpr const auto max_elements = 20;

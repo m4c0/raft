@@ -1,10 +1,9 @@
 import casein;
 import quack;
 
-struct element {};
-struct state {
-  bool create_mode;
-  int items[40];
+struct element {
+  element *next;
+  element *parent;
 };
 
 class group;
@@ -44,6 +43,10 @@ bool button(const casein::event &e) {
 void inputbox(const casein::event &e) { current_group()->create_element(); }
 void text(const casein::event &e) { current_group()->create_element(); }
 
+struct state {
+  bool create_mode;
+  int items[4];
+};
 class poc {
   state &s;
   const casein::event &e;
@@ -102,14 +105,18 @@ public:
   }
 };
 
-template <unsigned MaxElements> class raft_layout {
-  quack::instance_layout<element, MaxElements> m_il;
+template <typename Node> class raft_layout {
+  static constexpr const auto max_elements = 128;
+
+  quack::instance_layout<element, max_elements> m_il;
+  Node m_node;
 
 public:
-  explicit raft_layout(quack::renderer *r) : m_il{r} {}
+  explicit raft_layout(quack::renderer *r, Node &&a) : m_il{r}, m_node{a} {}
 
-  void update_layout() {
+  void update_layout(const casein::event &e) {
     m_il.reset_grid();
+    m_node(e);
     // update layout (create elements?)
     // fill
     // batch->resize?
@@ -119,7 +126,7 @@ public:
     m_il.process_event(e);
     switch (e.type()) {
     case casein::RESIZE_WINDOW:
-      update_layout();
+      update_layout(e);
       break;
     default:
       break;
@@ -131,7 +138,7 @@ extern "C" void casein_handle(const casein::event &e) {
   static state s{};
 
   static quack::renderer r{1};
-  static raft_layout<1> rl{&r};
+  static raft_layout rl{&r, [](auto ee) { poc(s, ee).root(); }};
 
   r.process_event(e);
   rl.process_event(e);

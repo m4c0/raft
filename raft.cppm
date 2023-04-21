@@ -5,7 +5,7 @@ import quack;
 namespace raft {
 struct element {
   element *next;
-  element *parent;
+  element *firstborn;
   quack::pos pos{100, 100};
 };
 element *&next_element() {
@@ -50,9 +50,11 @@ public:
 
   element *create_element() {
     auto *e = next_element()++;
-    e->parent = m_parent;
 
     if (m_tail == nullptr) {
+      if (m_parent != nullptr) {
+        m_parent->firstborn = e;
+      }
       m_head = e;
       m_tail = e;
     } else {
@@ -87,22 +89,23 @@ export template <typename Node> class layout {
   quack::instance_layout<element, max_elements> m_il;
   Node m_node;
 
+  void reset_grid() {
+    m_il.reset_grid();
+    next_element() = &m_il.at(0);
+  }
+  void execute_gui(const casein::event &e) { m_node(e); }
+
 public:
   explicit layout(quack::renderer *r, Node &&a) : m_il{r}, m_node{a} {}
 
   void update_layout(const casein::event &e) {
-    m_il.reset_grid();
-    next_element() = &m_il.at(0);
+    reset_grid();
+    execute_gui(e);
+    // update positions
 
-    m_node(e);
-    // update layout (create elements?)
-    // fill
-    // batch->resize?
     m_il.fill_colour([first = &m_il.at(0)](const auto &e) {
-      auto p = (float)(e.parent - first) / max_elements;
-      auto n = (float)(e.next - first) / max_elements;
-      auto r = e.parent == 0 ? 1.0f : 0.0f;
-      return quack::colour{r, p, n, 1};
+      auto n = (float)(&e - first) / max_elements;
+      return quack::colour{0, 0, n, 1};
     });
     m_il.fill_pos([](const auto &e) { return e.pos; });
     m_il.batch()->resize(max_elements, max_elements, max_elements,

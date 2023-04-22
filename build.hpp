@@ -8,5 +8,6 @@ auto raft() {
   auto m = unit::create<mod>("raft");
   m->add_wsdep("casein", casein());
   m->add_wsdep("quack", quack());
+  m->add_part("elements");
   return m;
 }

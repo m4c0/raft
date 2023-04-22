@@ -35,6 +35,30 @@ public:
   }
 };
 
+class buffer_overflow {};
+class e_stack {
+  static e_stack *ms_instance;
+
+  element *m_alloc_ptr{};
+  element *m_alloc_limit{};
+
+public:
+  template <unsigned N> explicit e_stack(element (&data)[N]) {
+    m_alloc_ptr = &data[0];
+    m_alloc_limit = &data[N];
+    ms_instance = this;
+  }
+  [[nodiscard]] element *alloc() {
+    if (m_alloc_ptr == m_alloc_limit)
+      throw buffer_overflow{};
+
+    return m_alloc_ptr++;
+  }
+
+  [[nodiscard]] static e_stack &instance() noexcept { return *ms_instance; }
+};
+e_stack *e_stack::ms_instance = nullptr;
+
 class e_group {
   element *m_parent{};
   element *m_head{};
@@ -44,7 +68,8 @@ public:
   [[nodiscard]] constexpr e_iterator begin() noexcept { return {m_head}; }
   [[nodiscard]] constexpr e_iterator end() noexcept { return {}; }
 
-  void add_element(element *e) noexcept {
+  [[nodiscard]] element *create_element() noexcept {
+    auto e = e_stack::instance().alloc();
     if (m_tail == nullptr) {
       m_head = e;
       m_tail = e;
@@ -52,27 +77,7 @@ public:
       m_tail->m_next = e;
       m_tail = e;
     }
-  }
-};
-
-class e_stack {
-  element *m_alloc_ptr{};
-  element *m_alloc_limit{};
-
-public:
-  [[nodiscard]] constexpr element *alloc() {
-    if (m_alloc_ptr == m_alloc_limit)
-      return m_alloc_ptr;
-    return m_alloc_ptr++;
-  }
-  constexpr void reset(element *first, element *last) {
-    m_alloc_ptr = first;
-    m_alloc_limit = last;
-  }
-
-  [[nodiscard]] static e_stack &instance() noexcept {
-    static e_stack i{};
-    return i;
+    return e;
   }
 };
 } // namespace raft

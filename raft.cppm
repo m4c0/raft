@@ -33,11 +33,7 @@ public:
   }
   ~group() { current_group() = m_prev_in_chain; }
 
-  element *create_element() {
-    auto e = e_stack::instance().alloc();
-    m_eg.add_element(e);
-    return e;
-  }
+  element *create_element() { return m_eg.create_element(); }
 };
 
 // lays out, raii-style
@@ -64,17 +60,16 @@ export template <typename Node> class layout {
   quack::instance_layout<element, max_elements> m_il;
   Node m_node;
 
-  void reset_grid() {
-    m_il.reset_grid();
-    e_stack::instance().reset(&m_il.at(0), &m_il.at(max_elements - 1));
+  void execute_gui(const casein::event &e) {
+    e_stack stack{m_il.data()};
+    m_node(e);
   }
-  void execute_gui(const casein::event &e) { m_node(e); }
 
 public:
   explicit layout(quack::renderer *r, Node &&a) : m_il{r}, m_node{a} {}
 
   void update_layout(const casein::event &e) {
-    reset_grid();
+    m_il.reset_grid();
     execute_gui(e);
     // update positions
 

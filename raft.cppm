@@ -1,13 +1,9 @@
 export module raft;
+import :elements;
 import casein;
 import quack;
 
 namespace raft {
-struct element {
-  element *next;
-  element *firstborn;
-  quack::pos pos{100, 100};
-};
 element *&next_element() {
   static element *ptr{};
   return ptr;
@@ -21,13 +17,11 @@ export group *&current_group() {
 
 class group {
   group *m_prev_in_chain;
-  element *m_parent{};
-  element *m_head{};
-  element *m_tail{};
+  e_group m_eg{};
 
 protected:
   void for_each(auto &&fn) {
-    for (auto e = m_head; e != nullptr; e = e->next) {
+    for (auto &e : m_eg) {
       fn(e);
     }
   }
@@ -41,43 +35,25 @@ public:
   group() {
     m_prev_in_chain = current_group();
     current_group() = this;
-
-    if (m_prev_in_chain != nullptr) {
-      m_parent = m_prev_in_chain->create_element();
-    }
   }
   ~group() { current_group() = m_prev_in_chain; }
 
-  element *create_element() {
-    auto *e = next_element()++;
-
-    if (m_tail == nullptr) {
-      if (m_parent != nullptr) {
-        m_parent->firstborn = e;
-      }
-      m_head = e;
-      m_tail = e;
-    } else {
-      m_tail->next = e;
-      m_tail = e;
-    }
-    return e;
-  }
+  element *create_element() { return e_stack::instance().alloc(); }
 };
 
 // lays out, raii-style
 export struct vgroup : public group {
   ~vgroup() {
-    for_each([i = 0](auto *e) mutable {
-      e->pos = {0, (float)i};
+    for_each([i = 0](auto &e) mutable {
+      e.pos({0, (float)i});
       i++;
     });
   }
 };
 export struct hgroup : public group {
   ~hgroup() {
-    for_each([i = 0](auto *e) mutable {
-      e->pos = {(float)i, 0};
+    for_each([i = 0](auto &e) mutable {
+      e.pos({(float)i, 0});
       i++;
     });
   }
@@ -107,7 +83,7 @@ public:
       auto n = (float)(&e - first) / max_elements;
       return quack::colour{0, 0, n, 1};
     });
-    m_il.fill_pos([](const auto &e) { return e.pos; });
+    m_il.fill_pos([](const auto &e) { return e.pos(); });
     m_il.batch()->resize(max_elements, max_elements, max_elements,
                          max_elements);
   }

@@ -3,9 +3,14 @@ import quack;
 
 namespace raft {
 class e_list;
+struct size {
+  float w = 1;
+  float h = 1;
+};
 struct e_data {
   quack::pos pos{};
-  quack::pos size{};
+  size size{1, 1};
+  bool hidden{};
 };
 class element {
   element *m_next{};

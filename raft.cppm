@@ -4,16 +4,22 @@ import casein;
 import quack;
 
 namespace raft {
+class root_group;
 class group {
   static group *ms_current;
 
-  group *m_parent;
+  group *m_parent{};
+  element *m_elem{};
   e_list m_eg{};
+
+  group(int) { ms_current = this; }
+
+  friend class root_group;
 
 protected:
   void for_each(auto &&fn) {
     for (auto &e : m_eg) {
-      fn(e);
+      fn(e.data());
     }
   }
 
@@ -26,6 +32,9 @@ public:
   group() {
     m_parent = ms_current;
     ms_current = this;
+
+    m_elem = m_parent->create_element();
+    m_elem->data().hidden = true;
   }
   ~group() { ms_current = m_parent; }
 
@@ -39,20 +48,24 @@ export [[nodiscard]] element *create_element() {
   return group::current()->create_element();
 }
 
+struct root_group : public group {
+  root_group() : group(0) {}
+};
+
 // lays out, raii-style
 export struct vgroup : public group {
   ~vgroup() {
-    for_each([i = 0](auto &e) mutable {
-      e.data().pos = {0, (float)i};
-      i++;
+    for_each([i = 0.0f](auto &d) mutable {
+      d.pos = {0, i};
+      i += d.size.w;
     });
   }
 };
 export struct hgroup : public group {
   ~hgroup() {
-    for_each([i = 0](auto &e) mutable {
-      e.data().pos = {(float)i, 0};
-      i++;
+    for_each([i = 0.0f](auto &d) mutable {
+      d.pos = {i, 0};
+      i += d.size.h;
     });
   }
 };
@@ -65,6 +78,7 @@ export template <typename Node> class layout {
 
   void execute_gui(const casein::event &e) {
     e_stack stack{m_il.data()};
+    root_group root{};
     m_node(e);
   }
 
@@ -77,6 +91,9 @@ public:
     // update positions
 
     m_il.fill_colour([first = &m_il.at(0)](const auto &e) {
+      if (e.data().hidden)
+        return quack::colour{};
+
       auto n = (float)(&e - first) / max_elements;
       return quack::colour{0, 0, n, 1};
     });

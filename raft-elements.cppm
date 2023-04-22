@@ -3,10 +3,14 @@ import quack;
 
 namespace raft {
 class e_list;
+struct e_data {
+  quack::pos pos{};
+  quack::pos size{};
+};
 class element {
   element *m_next{};
   element *m_firstborn{};
-  quack::pos m_pos{};
+  e_data m_data{};
 
   friend class e_list;
 
@@ -16,8 +20,8 @@ public:
   [[nodiscard]] constexpr element *next() noexcept { return m_next; }
   constexpr void next(element *n) noexcept { m_next = n; }
 
-  [[nodiscard]] constexpr auto pos() const noexcept { return m_pos; }
-  constexpr void pos(quack::pos p) noexcept { m_pos = p; }
+  [[nodiscard]] constexpr const e_data &data() const noexcept { return m_data; }
+  [[nodiscard]] constexpr e_data &data() noexcept { return m_data; }
 };
 
 class buffer_overflow {};

@@ -43,7 +43,7 @@ export [[nodiscard]] element *create_element() {
 export struct vgroup : public group {
   ~vgroup() {
     for_each([i = 0](auto &e) mutable {
-      e.pos({0, (float)i});
+      e.data().pos = {0, (float)i};
       i++;
     });
   }
@@ -51,7 +51,7 @@ export struct vgroup : public group {
 export struct hgroup : public group {
   ~hgroup() {
     for_each([i = 0](auto &e) mutable {
-      e.pos({(float)i, 0});
+      e.data().pos = {(float)i, 0};
       i++;
     });
   }
@@ -80,7 +80,7 @@ public:
       auto n = (float)(&e - first) / max_elements;
       return quack::colour{0, 0, n, 1};
     });
-    m_il.fill_pos([](const auto &e) { return e.pos(); });
+    m_il.fill_pos([](const auto &e) { return e.data().pos; });
     m_il.batch()->resize(max_elements, max_elements, max_elements,
                          max_elements);
   }

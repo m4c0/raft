@@ -4,11 +4,6 @@ import casein;
 import quack;
 
 namespace raft {
-element *&next_element() {
-  static element *ptr{};
-  return ptr;
-}
-
 class group;
 export group *&current_group() {
   static group *ptr{};
@@ -38,7 +33,11 @@ public:
   }
   ~group() { current_group() = m_prev_in_chain; }
 
-  element *create_element() { return e_stack::instance().alloc(); }
+  element *create_element() {
+    auto e = e_stack::instance().alloc();
+    m_eg.add_element(e);
+    return e;
+  }
 };
 
 // lays out, raii-style
@@ -67,7 +66,7 @@ export template <typename Node> class layout {
 
   void reset_grid() {
     m_il.reset_grid();
-    next_element() = &m_il.at(0);
+    e_stack::instance().reset(&m_il.at(0), &m_il.at(max_elements - 1));
   }
   void execute_gui(const casein::event &e) { m_node(e); }
 

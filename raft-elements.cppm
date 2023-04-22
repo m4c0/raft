@@ -57,9 +57,18 @@ public:
 
 class e_stack {
   element *m_alloc_ptr{};
+  element *m_alloc_limit{};
 
 public:
-  [[nodiscard]] constexpr element *alloc() { return m_alloc_ptr++; }
+  [[nodiscard]] constexpr element *alloc() {
+    if (m_alloc_ptr == m_alloc_limit)
+      return m_alloc_ptr;
+    return m_alloc_ptr++;
+  }
+  constexpr void reset(element *first, element *last) {
+    m_alloc_ptr = first;
+    m_alloc_limit = last;
+  }
 
   [[nodiscard]] static e_stack &instance() noexcept {
     static e_stack i{};

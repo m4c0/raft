@@ -4,13 +4,11 @@ import raft;
 
 // create elements
 bool button(const casein::event &e) {
-  raft::current_group()->create_element();
+  auto _ = raft::create_element();
   return false;
 }
-void inputbox(const casein::event &e) {
-  raft::current_group()->create_element();
-}
-void text(const casein::event &e) { raft::current_group()->create_element(); }
+void inputbox(const casein::event &e) { auto _ = raft::create_element(); }
+void text(const casein::event &e) { auto _ = raft::create_element(); }
 
 struct state {
   bool create_mode;

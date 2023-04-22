@@ -2,13 +2,13 @@ export module raft:elements;
 import quack;
 
 namespace raft {
-class e_group;
+class e_list;
 class element {
   element *m_next{};
   element *m_firstborn{};
   quack::pos m_pos{};
 
-  friend class e_group;
+  friend class e_list;
 
 public:
   constexpr element() noexcept = default;
@@ -84,8 +84,8 @@ static_assert([] {
   return true;
 }());
 
-class e_group {
-  element *m_parent{};
+class e_list {
+  e_list *m_parent{};
   element *m_head{};
   element *m_tail{};
 
@@ -112,7 +112,7 @@ public:
 static_assert([] {
   element e[4]{};
 
-  e_group grp{};
+  e_list grp{};
   grp.add_element(&e[0]);
   grp.add_element(&e[1]);
   grp.add_element(&e[2]);

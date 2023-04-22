@@ -4,15 +4,11 @@ import casein;
 import quack;
 
 namespace raft {
-class group;
-export group *&current_group() {
-  static group *ptr{};
-  return ptr;
-}
-
 class group {
-  group *m_prev_in_chain;
-  e_group m_eg{};
+  static group *ms_current;
+
+  group *m_parent;
+  e_list m_eg{};
 
 protected:
   void for_each(auto &&fn) {
@@ -28,13 +24,20 @@ public:
   constexpr group &operator=(group &&) = delete;
 
   group() {
-    m_prev_in_chain = current_group();
-    current_group() = this;
+    m_parent = ms_current;
+    ms_current = this;
   }
-  ~group() { current_group() = m_prev_in_chain; }
+  ~group() { ms_current = m_parent; }
 
   element *create_element() { return m_eg.create_element(); }
+
+  [[nodiscard]] static group *current() noexcept { return ms_current; }
 };
+group *group::ms_current{};
+
+export [[nodiscard]] element *create_element() {
+  return group::current()->create_element();
+}
 
 // lays out, raii-style
 export struct vgroup : public group {

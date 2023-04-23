@@ -26,8 +26,6 @@ public:
 
 class buffer_overflow {};
 class e_stack {
-  static e_stack *ms_instance;
-
   element *m_alloc_ptr{};
   element *m_alloc_limit{};
 
@@ -35,7 +33,6 @@ public:
   template <unsigned N> explicit e_stack(element (&data)[N]) {
     m_alloc_ptr = &data[0];
     m_alloc_limit = &data[N];
-    ms_instance = this;
   }
   [[nodiscard]] element *alloc() {
     if (m_alloc_ptr == m_alloc_limit)
@@ -43,10 +40,7 @@ public:
 
     return m_alloc_ptr++;
   }
-
-  [[nodiscard]] static e_stack &instance() noexcept { return *ms_instance; }
 };
-e_stack *e_stack::ms_instance = nullptr;
 
 class e_iterator {
   element *m_ref{};
@@ -106,8 +100,8 @@ public:
       m_tail = e;
     }
   }
-  [[nodiscard]] element *create_element() noexcept {
-    auto e = e_stack::instance().alloc();
+  [[nodiscard]] element *create_element(e_stack &i) noexcept {
+    auto e = i.alloc();
     add_element(e);
     return e;
   }

@@ -5,92 +5,31 @@ import casein;
 import quack;
 
 namespace raft {
-class root_group;
-export element *create_element();
-class group {
-  static group *ms_current;
+export void hgroup(auto &&fn) { fn(); }
+export void vgroup(auto &&fn) { fn(); }
 
-  group *m_parent{};
-  element *m_elem{};
-  e_list m_eg{};
-
-  group(int) { ms_current = this; }
-
-  friend class root_group;
-  friend element *create_element();
-
-protected:
-  [[nodiscard]] constexpr auto &data() noexcept { return m_elem->data(); }
-
-  element *create_element() { return m_eg.create_element(); }
-
-  void for_each(auto &&fn) {
-    for (auto &e : m_eg) {
-      fn(e.data());
-    }
-  }
-
-public:
-  constexpr group(const group &) = delete;
-  constexpr group(group &&) = delete;
-  constexpr group &operator=(const group &) = delete;
-  constexpr group &operator=(group &&) = delete;
-
-  group() {
-    m_parent = ms_current;
-    ms_current = this;
-
-    m_elem = m_parent->create_element();
-    m_elem->data().hidden = true;
-  }
-  ~group() { ms_current = m_parent; }
-
-  [[nodiscard]] static group *current() noexcept { return ms_current; }
-};
-group *group::ms_current{};
-
-export [[nodiscard]] element *create_element() {
-  return group::current()->create_element();
-}
-
-struct root_group : public group {
-  root_group() : group(0) {}
+export struct context {
+  e_stack stack;
+  const casein::event &event;
 };
 
-// lays out, raii-style
-export struct vgroup : public group {
-  ~vgroup() {
-    for_each([this](auto &d) mutable {
-      auto &h = data().area.h;
-      d.area.y = h;
-      h += d.area.h;
-    });
-  }
-};
-export struct hgroup : public group {
-  ~hgroup() {
-    for_each([this](auto &d) mutable {
-      auto &w = data().area.w;
-      d.area.x = w;
-      w += d.area.w;
-    });
-  }
-};
-
-export template <typename Node> class layout {
+export class layout {
   static constexpr const auto max_elements = 20;
 
   quack::instance_layout<element, max_elements> m_il;
-  Node m_node;
+  void (*m_node)(context *);
 
   void execute_gui(const casein::event &e) {
-    e_stack stack{m_il.data()};
-    root_group root{};
-    m_node(e);
+    context ctx{
+        .stack{m_il.data()},
+        .event{e},
+    };
+    m_node(&ctx);
   }
 
 public:
-  explicit layout(quack::renderer *r, Node &&a) : m_il{r}, m_node{a} {}
+  explicit layout(quack::renderer *r, decltype(m_node) a)
+      : m_il{r}, m_node{a} {}
 
   void update_layout(const casein::event &e) {
     m_il.reset_grid();

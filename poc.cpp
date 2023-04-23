@@ -3,16 +3,9 @@ import quack;
 import raft;
 
 // create elements
-bool button(const casein::event &e) {
-  raft::size_of(raft::create_element()->data().area) = raft::size{2, 1};
-  return false;
-}
-void inputbox(const casein::event &e) {
-  raft::size_of(raft::create_element()->data().area) = raft::size{3, 1};
-}
-void text(const casein::event &e) {
-  raft::size_of(raft::create_element()->data().area) = raft::size{4, 1};
-}
+bool button(auto) { return false; }
+void inputbox(auto) {}
+void text(auto) {}
 
 struct state {
   bool create_mode;
@@ -20,12 +13,12 @@ struct state {
 };
 class poc {
   state &s;
-  const casein::event &e;
+  raft::context *c;
 
-  void create_input() const { inputbox(e); }
-  void search_input() const { inputbox(e); }
+  void create_input() const { inputbox(c); }
+  void search_input() const { inputbox(c); }
 
-  void title() const { text(e); }
+  void title() const { text(c); }
   void input() const {
     if (s.create_mode) {
       create_input();
@@ -35,44 +28,44 @@ class poc {
   }
 
   void item(auto i) const {
-    raft::hgroup hg{};
-
-    if (button(e)) {
-    }
-    text(e);
+    raft::hgroup([this] {
+      if (button(c)) {
+      }
+      text(c);
+    });
   }
 
   void header() const {
-    raft::hgroup hg{};
-
-    title();
-    input();
+    raft::hgroup([this] {
+      title();
+      input();
+    });
   }
   void list() const {
-    raft::vgroup vg{};
-
-    for (auto i : s.items) {
-      item(i);
-    }
+    raft::vgroup([this] {
+      for (auto i : s.items) {
+        item(i);
+      }
+    });
   }
-  void footer() const { text(e); }
+  void footer() const { text(c); }
   void info() const {
     if (s.create_mode) {
-      text(e);
+      text(c);
     } else {
-      text(e);
+      text(c);
     }
   }
 
 public:
-  explicit constexpr poc(state &s, const casein::event &e) : s{s}, e{e} {}
+  explicit constexpr poc(state &s, raft::context *c) : s{s}, c{c} {}
   void root() {
-    raft::vgroup vg{};
-
-    header();
-    list();
-    footer();
-    info();
+    raft::vgroup([this] {
+      header();
+      list();
+      footer();
+      info();
+    });
   }
 };
 
@@ -80,7 +73,7 @@ extern "C" void casein_handle(const casein::event &e) {
   static state s{};
 
   static quack::renderer r{1};
-  static raft::layout rl{&r, [](auto ee) { poc(s, ee).root(); }};
+  static raft::layout rl{&r, [](raft::context *c) { poc{s, c}.root(); }};
 
   r.process_event(e);
   rl.process_event(e);

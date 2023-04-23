@@ -3,13 +3,8 @@ import quack;
 
 namespace raft {
 class e_list;
-struct size {
-  float w{};
-  float h{};
-};
 struct e_data {
-  quack::pos pos{};
-  size size{};
+  quack::rect area{};
   bool hidden{};
 };
 class element {

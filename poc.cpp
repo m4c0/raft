@@ -4,14 +4,14 @@ import raft;
 
 // create elements
 bool button(const casein::event &e) {
-  raft::create_element()->data().size = {1, 1};
+  raft::size_of(raft::create_element()->data().area) = raft::size{2, 1};
   return false;
 }
 void inputbox(const casein::event &e) {
-  raft::create_element()->data().size = {1, 1};
+  raft::size_of(raft::create_element()->data().area) = raft::size{3, 1};
 }
 void text(const casein::event &e) {
-  raft::create_element()->data().size = {1, 1};
+  raft::size_of(raft::create_element()->data().area) = raft::size{4, 1};
 }
 
 struct state {

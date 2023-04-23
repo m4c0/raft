@@ -1,10 +1,12 @@
 export module raft;
 import :elements;
+export import :objects;
 import casein;
 import quack;
 
 namespace raft {
 class root_group;
+export element *create_element();
 class group {
   static group *ms_current;
 
@@ -15,6 +17,7 @@ class group {
   group(int) { ms_current = this; }
 
   friend class root_group;
+  friend element *create_element();
 
 protected:
   [[nodiscard]] constexpr auto &data() noexcept { return m_elem->data(); }
@@ -58,18 +61,18 @@ struct root_group : public group {
 export struct vgroup : public group {
   ~vgroup() {
     for_each([this](auto &d) mutable {
-      auto &h = data().size.h;
-      d.pos = {0, h};
-      h += d.size.h;
+      auto &h = data().area.h;
+      d.area.y = h;
+      h += d.area.h;
     });
   }
 };
 export struct hgroup : public group {
   ~hgroup() {
     for_each([this](auto &d) mutable {
-      auto &w = data().size.w;
-      d.pos = {w, 0};
-      w += d.size.w;
+      auto &w = data().area.w;
+      d.area.x = w;
+      w += d.area.w;
     });
   }
 };
@@ -101,7 +104,7 @@ public:
       auto n = (float)(&e - first) / max_elements;
       return quack::colour{0, 0, n, 1};
     });
-    m_il.fill_pos([](const auto &e) { return e.data().pos; });
+    m_il.fill_pos([](const auto &e) { return e.data().area; });
     m_il.batch()->resize(max_elements, max_elements, max_elements,
                          max_elements);
   }

@@ -2,11 +2,11 @@ export module raft:objects;
 import quack;
 
 namespace raft {
-using pos = quack::pos;
-using size = quack::size;
-using area = quack::rect;
+export using pos = quack::pos;
+export using size = quack::size;
+export using area = quack::rect;
 
-[[nodiscard]] constexpr const size &size_of(area &a) noexcept { return a; }
+export [[nodiscard]] constexpr size &size_of(area &a) noexcept { return a; }
 
 static_assert([] {
   area a{1, 2, 3, 4};

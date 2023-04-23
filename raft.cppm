@@ -5,13 +5,13 @@ import casein;
 import quack;
 
 namespace raft {
-export void hgroup(auto &&fn) { fn(); }
-export void vgroup(auto &&fn) { fn(); }
-
 export struct context {
   e_stack stack;
   const casein::event &event;
 };
+
+export void hgroup(context *c, auto &&fn) { fn(); }
+export void vgroup(context *c, auto &&fn) { fn(); }
 
 export class layout {
   static constexpr const auto max_elements = 20;

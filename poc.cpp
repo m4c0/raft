@@ -28,7 +28,7 @@ class poc {
   }
 
   void item(auto i) const {
-    raft::hgroup([this] {
+    raft::hgroup(c, [this] {
       if (button(c)) {
       }
       text(c);
@@ -36,13 +36,13 @@ class poc {
   }
 
   void header() const {
-    raft::hgroup([this] {
+    raft::hgroup(c, [this] {
       title();
       input();
     });
   }
   void list() const {
-    raft::vgroup([this] {
+    raft::vgroup(c, [this] {
       for (auto i : s.items) {
         item(i);
       }
@@ -60,7 +60,7 @@ class poc {
 public:
   explicit constexpr poc(state &s, raft::context *c) : s{s}, c{c} {}
   void root() {
-    raft::vgroup([this] {
+    raft::vgroup(c, [this] {
       header();
       list();
       footer();

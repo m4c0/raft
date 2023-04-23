@@ -17,6 +17,10 @@ class group {
   friend class root_group;
 
 protected:
+  [[nodiscard]] constexpr auto &data() noexcept { return m_elem->data(); }
+
+  element *create_element() { return m_eg.create_element(); }
+
   void for_each(auto &&fn) {
     for (auto &e : m_eg) {
       fn(e.data());
@@ -38,8 +42,6 @@ public:
   }
   ~group() { ms_current = m_parent; }
 
-  element *create_element() { return m_eg.create_element(); }
-
   [[nodiscard]] static group *current() noexcept { return ms_current; }
 };
 group *group::ms_current{};
@@ -55,17 +57,19 @@ struct root_group : public group {
 // lays out, raii-style
 export struct vgroup : public group {
   ~vgroup() {
-    for_each([i = 0.0f](auto &d) mutable {
-      d.pos = {0, i};
-      i += d.size.w;
+    for_each([this](auto &d) mutable {
+      auto &h = data().size.h;
+      d.pos = {0, h};
+      h += d.size.h;
     });
   }
 };
 export struct hgroup : public group {
   ~hgroup() {
-    for_each([i = 0.0f](auto &d) mutable {
-      d.pos = {i, 0};
-      i += d.size.h;
+    for_each([this](auto &d) mutable {
+      auto &w = data().size.w;
+      d.pos = {w, 0};
+      w += d.size.w;
     });
   }
 };

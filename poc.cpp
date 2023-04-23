@@ -3,9 +3,16 @@ import quack;
 import raft;
 
 // create elements
-bool button(auto) { return false; }
-void inputbox(auto) {}
-void text(auto) {}
+bool button(raft::context *c) {
+  raft::size_of(c->create_element().area) = {1, 1};
+  return false;
+}
+void inputbox(raft::context *c) {
+  raft::size_of(c->create_element().area) = {2, 1};
+}
+void text(raft::context *c) {
+  raft::size_of(c->create_element().area) = {3, 1};
+}
 
 struct state {
   bool create_mode;

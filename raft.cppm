@@ -5,25 +5,47 @@ import casein;
 import quack;
 
 namespace raft {
-export struct context {
-  e_stack stack;
-  const casein::event &event;
+static constexpr const auto max_elements = 20;
+using qil = quack::instance_layout<element, max_elements>;
+
+export class context {
+  e_stack m_stack;
+  area m_rem_area{0, 0, max_elements, max_elements};
+  const casein::event &m_event;
+  e_list m_group;
+
+public:
+  context(qil &il, const casein::event &e) : m_stack{il.data()}, m_event{e} {}
+
+  [[nodiscard]] constexpr auto &event() noexcept { return m_event; }
+  [[nodiscard]] constexpr auto &rem_area() noexcept { return m_rem_area; }
+
+  [[nodiscard]] auto &create_element() noexcept {
+    auto *e = m_stack.alloc();
+    e->data().area = m_rem_area;
+    m_group.add_element(e);
+    return e->data();
+  }
 };
 
-export void hgroup(context *c, auto &&fn) { fn(); }
-export void vgroup(context *c, auto &&fn) { fn(); }
+export void hgroup(context *c, auto &&fn) {
+  fn();
+  c->rem_area().x++;
+  c->rem_area().w--;
+}
+export void vgroup(context *c, auto &&fn) {
+  fn();
+  c->rem_area().y++;
+  c->rem_area().h--;
+}
 
 export class layout {
-  static constexpr const auto max_elements = 20;
 
   quack::instance_layout<element, max_elements> m_il;
   void (*m_node)(context *);
 
   void execute_gui(const casein::event &e) {
-    context ctx{
-        .stack{m_il.data()},
-        .event{e},
-    };
+    context ctx{m_il, e};
     m_node(&ctx);
   }
 

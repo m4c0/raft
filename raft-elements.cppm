@@ -1,10 +1,11 @@
 export module raft:elements;
+import :objects;
 import quack;
 
 namespace raft {
 class e_list;
 struct e_data {
-  quack::rect area{};
+  area area{};
   bool hidden{};
 };
 class element {
